@@ -1,0 +1,69 @@
+FUNCTION_BLOCK prototype
+    VAR_INPUT
+        vitesse : REAL; (* deg/s *)
+        vit_obs : REAL; (* mm/s *)
+        distance : REAL; (* mm *)
+    END_VAR
+
+    VAR_OUTPUT
+        command_speed : REAL;
+    END_VAR
+
+    FUZZIFY vitesse
+        TERM basse := (0, 1) (150, 0) ;
+        TERM moyenne := (0, 0) (150, 1) (300, 0) ;
+        TERM elevee := (150, 0) (300, 1) ;
+    END_FUZZIFY
+
+    FUZZIFY vit_obs
+        TERM se_rapproche_vite := (-417, 1) (0, 0) ;
+        TERM meme_vit := (-417, 0) (0, 1) (417, 0);
+        TERM s_eloigne_vite := (0, 0) (417, 1) ;
+    END_FUZZIFY
+
+    FUZZIFY distance
+        TERM grande := (800, 0) (2000, 1) ;
+        TERM correcte := (0, 0) (800, 1) (2000, 0) ;
+        TERM petite := (0, 1) (800, 0) ;
+    END_FUZZIFY
+
+    DEFUZZIFY command_speed
+        TERM ralentir := 1 ;
+        TERM constant := 2 ;
+        TERM accelerer := 3 ;
+        ACCU: MAX;
+        METHODS: COGS; (* Centres de gravite *)
+        DEFAULT := 0; 
+    END_DEFUZZIFY
+
+    RULEBLOCK first (* Voir tableau Excel : Table des regles de defuzzyfication *)
+        AND:MIN;
+        RULE 0: IF (vitesse IS elevee) AND (vit_obs IS s_eloigne_vite) AND (distance IS correcte) THEN (command_speed IS accelerer);
+        RULE 1: IF (vitesse IS elevee) AND (vit_obs IS s_eloigne_vite) AND (distance IS grande) THEN (command_speed IS accelerer);
+        RULE 2: IF (vitesse IS elevee) AND (vit_obs IS meme_vit) AND (distance IS grande) THEN (command_speed IS accelerer);
+        RULE 3: IF (vitesse IS moyenne) AND (vit_obs IS s_eloigne_vite) AND (distance IS correcte) THEN (command_speed IS accelerer);
+        RULE 4: IF (vitesse IS moyenne) AND (vit_obs IS s_eloigne_vite) AND (distance IS grande) THEN (command_speed IS accelerer);
+        RULE 5: IF (vitesse IS moyenne) AND (vit_obs IS meme_vit) AND (distance IS grande) THEN (command_speed IS accelerer);
+        RULE 6: IF (vitesse IS basse) AND (vit_obs IS s_eloigne_vite) AND (distance IS grande) THEN (command_speed IS accelerer);
+        RULE 7: IF (vitesse IS basse) AND (vit_obs IS meme_vit) AND (distance IS grande) THEN (command_speed IS accelerer);
+        RULE 8: IF (vitesse IS basse) AND (vit_obs IS se_rapproche_vite) AND (distance IS grande) THEN (command_speed IS accelerer);
+        RULE 9: IF (vitesse IS basse) AND (vit_obs IS s_eloigne_vite) AND (distance IS correcte) THEN (command_speed IS accelerer);
+        RULE 10: IF (vitesse IS elevee) AND (vit_obs IS meme_vit) AND (distance IS correcte) THEN (command_speed IS constant);
+        RULE 11: IF (vitesse IS elevee) AND (vit_obs IS se_rapproche_vite) AND (distance IS grande) THEN (command_speed IS constant);
+        RULE 12: IF (vitesse IS elevee) AND (vit_obs IS s_eloigne_vite) AND (distance IS petite) THEN (command_speed IS constant);
+        RULE 13: IF (vitesse IS moyenne) AND (vit_obs IS meme_vit) AND (distance IS correcte) THEN (command_speed IS constant);
+        RULE 14: IF (vitesse IS moyenne) AND (vit_obs IS se_rapproche_vite) AND (distance IS grande) THEN (command_speed IS constant);
+        RULE 15: IF (vitesse IS moyenne) AND (vit_obs IS s_eloigne_vite) AND (distance IS petite) THEN (command_speed IS constant);
+        RULE 16: IF (vitesse IS basse) AND (vit_obs IS meme_vit) AND (distance IS correcte) THEN (command_speed IS constant);
+        RULE 17: IF (vitesse IS basse) AND (vit_obs IS s_eloigne_vite) AND (distance IS petite) THEN (command_speed IS constant);
+        RULE 18: IF (vitesse IS elevee) AND (vit_obs IS se_rapproche_vite) AND (distance IS correcte) THEN (command_speed IS constant);
+        RULE 19: IF (vitesse IS elevee) AND (vit_obs IS meme_vit) AND (distance IS petite) THEN (command_speed IS ralentir);
+        RULE 20: IF (vitesse IS elevee) AND (vit_obs IS se_rapproche_vite) AND (distance IS petite) THEN (command_speed IS ralentir);
+        RULE 21: IF (vitesse IS moyenne) AND (vit_obs IS se_rapproche_vite) AND (distance IS correcte) THEN (command_speed IS constant);
+        RULE 22: IF (vitesse IS moyenne) AND (vit_obs IS meme_vit) AND (distance IS petite) THEN (command_speed IS ralentir);
+        RULE 23: IF (vitesse IS moyenne) AND (vit_obs IS se_rapproche_vite) AND (distance IS petite) THEN (command_speed IS ralentir);
+        RULE 24: IF (vitesse IS basse) AND (vit_obs IS se_rapproche_vite) AND (distance IS correcte) THEN (command_speed IS constant);
+        RULE 25: IF (vitesse IS basse) AND (vit_obs IS meme_vit) AND (distance IS petite) THEN (command_speed IS ralentir);
+        RULE 26: IF (vitesse IS basse) AND (vit_obs IS se_rapproche_vite) AND (distance IS petite) THEN (command_speed IS ralentir);
+    END_RULEBLOCK
+END_FUNCTION_BLOCK
